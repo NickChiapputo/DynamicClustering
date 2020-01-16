@@ -19,8 +19,8 @@ plot: $(PLOT_OBJ)
 	$(PLOT) $(PLOT_FLAGS) $(PLOT_OBJ) $(FILE) $(NODES) $(ARGS)
 
 
-cleanC: 
-	rm -f C/*.o && rm -f $(BANDIT_EXEC) && rm -f $(PDIFF_EXEC)
+cleanSource: 
+	rm -f source/*.o && rm -f $(DYN_EXEC) && rm -f $(PDIFF_EXEC)
 
 
 cleanAll: cleanC cleanPDF
