@@ -8,9 +8,6 @@
 #define COMMLEN 128		// Length of plot command
 #define BUFSIZE 1028	// Maximum adjacency vector for each vertex
 
-// Function definitions
-Vertex ** layout( Vertex**, int )	// Top-level clustering function
-
 typedef struct Vertex
 {
 	int label;			// Node label (e.g., 1, 2, 3, etc.)
@@ -19,6 +16,11 @@ typedef struct Vertex
 
 	int x, y;			// Position of vertex on graph
 } Vertex;
+
+
+// Function definitions
+Vertex ** layout( Vertex**, int );	// Top-level clustering function
+
 
 int main()
 {
