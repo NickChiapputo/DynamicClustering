@@ -21,6 +21,3 @@ plot: $(PLOT_OBJ)
 
 cleanSource: 
 	rm -f source/*.o && rm -f $(DYN_EXEC) && rm -f $(PDIFF_EXEC)
-
-
-cleanAll: cleanC cleanPDF
