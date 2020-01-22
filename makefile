@@ -11,7 +11,7 @@ PLOT_FLAGS =
 dyn: clean $(DYN_OBJ)
 	$(CC) -o $(DYN_EXEC) $(DYN_OBJ) $(DYN_FLAGS)
 
-runDyn: dyn
+run: dyn
 	clear && ./$(DYN_EXEC)
 
 
