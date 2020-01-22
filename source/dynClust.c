@@ -20,7 +20,7 @@ typedef struct Vertex
 
 // Function definitions
 void graphInput( Vertex**, int, FILE* );	// Get graph input from file pointer
-void layout( Vertex**, int );				// Top-level clustering function
+Vertex** layout( Vertex**, int );			// Top-level clustering function
 void graphOutput( Vertex**, int, char* );	// Write graph output to file
 
 
@@ -66,22 +66,25 @@ int main()
 
 	// Graph layout
 	// Place nodes on the grid
-	layout( graph, numVertices );
+	Vertex ** finalGraph = layout( graph, numVertices );
 
 
 	// Save output graph
 	printf( "Output File: " );
 	scanf( "%[^\n]%*c", fileName );
-	graphOutput( graph, numVertices, fileName );
+	graphOutput( finalGraph, numVertices, fileName );
 
 	int i;
 	for( i = 0; i < numVertices; i++ )
 	{
 		free( graph[ i ] -> adjList );
 		free( graph[ i ] );
+		free( finalGraph[ i ] -> adjList );
+		free( finalGraph[ i ] );
 	}
 
 	free( graph );
+	free( finalGraph );
 
 	char response;
 	printf( "Display graph (y/n)? " );
@@ -155,14 +158,66 @@ void graphInput( Vertex ** graph, int numVertices, FILE * fp )
 	fclose( fp );	
 }
 
-void layout( Vertex ** graph, int numVertices )
+Vertex** layout( Vertex ** g, int numVertices )
 {
 	int i, j;
+
+
+	// Create final, efficient graph and allocate space for vertices
+	Vertex ** graph = (Vertex**) malloc( numVertices * sizeof( Vertex * ) );
+
+	// Copy data from initial graph to final graph
 	for( i = 0; i < numVertices; i++ )
 	{
-		graph[ i ] -> x = i % 5;
-		graph[ i ] -> y = i / 5;
+		Vertex * v = (Vertex*) malloc( sizeof( Vertex ) );
+		v -> adjList = (int*) malloc( ARRSIZE * sizeof( int ) );
+		*v = *g[ i ];
+		graph[ i ] = v;
 	}
+
+
+	// Search for node with highest degree
+	int maxDegree = graph[ 0 ] -> degree;
+	int maxIndex = 0;
+
+	graph[ 0 ] -> x = 0;
+	graph[ 0 ] -> y = 0;
+
+	for( i = 1; i < numVertices; i++ )
+	{
+		if( graph[ i ] -> degree > maxDegree )
+		{
+			maxDegree = graph[ i ] -> degree;
+			maxIndex = i;
+		}
+		graph[ i ] -> x = 0;
+		graph[ i ] -> y = 0;
+	}
+
+	// Place connected nodes in order around starting node
+	Vertex currV = *graph[ maxIndex ];
+	graph[ currV.adjList[ 0 ] ] -> x = currV.x - 1;
+	graph[ currV.adjList[ 0 ] ] -> y = currV.y;
+
+	if( currV.degree > 1 )
+	{
+		graph[ currV.adjList[ 1 ] ] -> x = currV.x;
+		graph[ currV.adjList[ 1 ] ] -> y = currV.y + 1;
+	}
+
+	if( currV.degree > 2 )
+	{
+		graph[ currV.adjList[ 2 ] ] -> x = currV.x + 1;
+		graph[ currV.adjList[ 2 ] ] -> y = currV.y;
+	}
+
+	if( currV.degree > 3 )
+	{
+		graph[ currV.adjList[ 3 ] ] -> x = currV.x;
+		graph[ currV.adjList[ 3 ] ] -> y = currV.y - 1;
+	}
+	
+	return graph;
 }
 
 void graphOutput( Vertex ** graph, int numVertices, char * fileName )
