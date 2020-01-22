@@ -19,7 +19,9 @@ typedef struct Vertex
 
 
 // Function definitions
-Vertex ** layout( Vertex**, int );	// Top-level clustering function
+void graphInput( Vertex**, int, FILE* );	// Get graph input from file pointer
+void layout( Vertex**, int );				// Top-level clustering function
+void graphOutput( Vertex**, int, char* );	// Write graph output to file
 
 
 int main()
@@ -52,12 +54,54 @@ int main()
 	{
 		numVertices++;
 	}
+	free( buff );
 
 	// Set file pointer back to beginning of file
 	fseek( fp, 0, SEEK_SET );
 
-	// Array to hold all vertices (graph)
+	// Get graph input and hold each vertex (as a pointer) in the 'graph' array
 	Vertex ** graph = (Vertex**) malloc( numVertices * sizeof( Vertex * ) );
+	graphInput( graph, numVertices, fp );
+
+
+	// Graph layout
+	// Place nodes on the grid
+	layout( graph, numVertices );
+
+
+	// Save output graph
+	printf( "Output File: " );
+	scanf( "%[^\n]%*c", fileName );
+	graphOutput( graph, numVertices, fileName );
+
+	int i;
+	for( i = 0; i < numVertices; i++ )
+	{
+		free( graph[ i ] -> adjList );
+		free( graph[ i ] );
+	}
+
+	free( graph );
+
+	char response;
+	printf( "Display graph (y/n)? " );
+	scanf( "%c", &response );
+
+	if( response == 'y' || response == 'Y' )
+	{
+		char command[ COMMLEN ];
+		snprintf( command, COMMLEN, "make plot FILE=%s NODES=%i", fileName, numVertices );
+		system( command );
+	}
+
+	return 0;
+} 
+
+void graphInput( Vertex ** graph, int numVertices, FILE * fp )
+{
+	// String vars to hold line data from file and to parse through line data
+	char * buff = malloc( BUFSIZE * sizeof( char ) );
+	char * temp;
 
 	// Read each line until the end of the file
 	// Use i as current node label. [ 0, numVertices - 1 ]
@@ -107,32 +151,23 @@ int main()
 		graph[ i++ ] = v;
 	}
 
-	fclose( fp );
+	free( buff );
+	fclose( fp );	
+}
 
-	// Display edges
-	// for( i = 0; i < numVertices; i++ )
-	// {
-	// 	printf( "%2i  (%i, %i)- ", i, graph[ i ] -> x, graph[ i ] -> y );
-	// 	for( j = 0; j < graph[ i ] -> degree; j++ )
-	// 	{
-	// 		// if( graph[ i ] -> adjList[ j ] > graph[ i ] -> label )
-	// 		// {
-	// 			printf( "{ %2i, %2i }%s", 
-	// 					graph[ i ] -> label, 
-	// 					graph[ i ] -> adjList[ j ], 
-	// 					j == graph[ i ] -> degree - 1 ? "\n\n" : ", " );
-	// 		// }
-	// 	}
-	// }
+void layout( Vertex ** graph, int numVertices )
+{
+	int i, j;
+	for( i = 0; i < numVertices; i++ )
+	{
+		graph[ i ] -> x = i % 5;
+		graph[ i ] -> y = i / 5;
+	}
+}
 
-	// Graph layout
-	// Place nodes on the grid
-	graph = layout( graph, numVertices );
-
-	// Save output graph
-	printf( "Output File: " );
-	scanf( "%[^\n]%*c", fileName );
-	fp = fopen( fileName, "w" );
+void graphOutput( Vertex ** graph, int numVertices, char * fileName )
+{
+	FILE * fp = fopen( fileName, "w" );
 
 	if( !fp )
 	{
@@ -140,6 +175,7 @@ int main()
 		exit( EXIT_FAILURE );
 	}
 
+	int i, j;
 	for( i = 0; i < numVertices; i++ )
 	{
 		// Print x, y coordinates
@@ -154,31 +190,4 @@ int main()
 	}
 
 	fclose( fp );
-
-	for( i = 0; i < numVertices; i++ )
-	{
-		free( graph[ i ] -> adjList );
-		free( graph[ i ] );
-	}
-
-	free( buff );
-	free( graph );
-
-	char response;
-	printf( "Display graph (y/n)? " );
-	scanf( "%c", &response );
-
-	if( response == 'y' || response == 'Y' )
-	{
-		char command[ COMMLEN ];
-		snprintf( command, COMMLEN, "make plot FILE=%s NODES=%i", fileName, numVertices );
-		system( command );
-	}
-
-	return 0;
-} 
-
-Vertex ** layout( Vertex ** graph, int numVertices )
-{
-	
 }
