@@ -19,5 +19,5 @@ plot: $(PLOT_OBJ)
 	$(PLOT) $(PLOT_FLAGS) $(PLOT_OBJ) $(FILE) $(NODES) $(ARGS)
 
 
-cleanSource: 
+clean: 
 	rm -f source/*.o && rm -f $(DYN_EXEC)
