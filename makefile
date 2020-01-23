@@ -2,7 +2,7 @@ CC = gcc
 PLOT = python3
 
 DYN_FLAGS = -lm
-DYN_OBJ = source/dynClust.o
+DYN_OBJ = source/dynClust.o source/queue.o
 DYN_EXEC = source/dynClust
 
 PLOT_OBJ = source/plot.py
