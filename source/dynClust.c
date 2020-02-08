@@ -170,8 +170,6 @@ Vertex** layout( Vertex ** g, int numVertices, char* fileName )
 	char * tempFileName = (char*) malloc( FILELEN * sizeof( char ) );
 	strcpy( tempFileName, fileName );
 	tempFileName = strtok( tempFileName, "." );
-	strcat( tempFileName, "_init.dat" );
-	graphOutput( g, numVertices, tempFileName );
 
 	// Create final, efficient graph and allocate space for vertices
 	Vertex ** graph = (Vertex**) malloc( numVertices * sizeof( Vertex * ) );
@@ -226,11 +224,16 @@ Vertex** layout( Vertex ** g, int numVertices, char* fileName )
 		graph[ i ] -> placed = 0;
 	}
 
+	// Keep highest and lowest x and y values to calculate required area after layout is done
+	int maxY = numVertices / 2, minY = numVertices / 2;
+	int maxX = numVertices / 2, minX = numVertices / 2;
+
 	// Place node with highest degree in middle of grid
-	Vertex v = *graph[ maxIndex ];
-	v.x = numVertices / 2;
-	v.y = numVertices / 2;
-	grid[ numVertices / 2 ][ numVertices / 2 ] = v.label;
+	Vertex * v = graph[ maxIndex ];
+	v -> x = numVertices / 2;
+	v -> y = numVertices / 2;
+	grid[ numVertices / 2 ][ numVertices / 2 ] = v -> label;
+	v -> placed = 1;
 
 	// Add node with highest degree to queue
 	Node * temp = malloc( sizeof( Node ) );
@@ -240,53 +243,60 @@ Vertex** layout( Vertex ** g, int numVertices, char* fileName )
 	enqueue( q, temp );
 
 
+	int count = 0;
+
+	// Save starting position
+	sprintf( fileName, "%s_%i.dat", tempFileName, count );
+	printf( "First save to '%s'\n", fileName );
+	graphOutput( graph, numVertices, fileName );
+
+
 	// Loop until queue is empty
 	// At each node, attempt to place nodes in four available spots around current node
 	// If unable to place spots, break out
 	// If able to place spots, save intermediate graph
-	int count = 0;
 	while( q -> head != NULL )
 	{
 		Node * n = dequeue( q );
 		count++;
-		printf( "Count: %i\n", count );
+		// printf( "\n\nCount: %i\n", count );
 
 
-		Vertex v = *( n -> v );
+		Vertex * v = n -> v;
 
 		// Loop through adjacent nodes and attempt to place in four legal spots
 		// around current node
-		for( i = 0; i < v.degree; i++ )
+		for( i = 0; i < v -> degree; i++ )
 		{
-			if( graph[ v.adjList[ i ] ] -> placed != 1 )
+			if( graph[ v -> adjList[ i ] ] -> placed != 1 )
 			{
-				if( grid[ v.x - 1 ][ v.y ] == -1 )			// Attempt to place to the left
+				if( grid[ v -> x ][ v -> y + 1 ] == -1 )		// Attempt to place to the top
 				{
-					graph[ v.adjList[ i ] ] -> x = v.x - 1;
-					graph[ v.adjList[ i ] ] -> y = v.y;
+					graph[ v -> adjList[ i ] ] -> x = v -> x;
+					graph[ v -> adjList[ i ] ] -> y = v -> y + 1;
 
-					grid[ v.x - 1 ][ v.y ] = v.adjList[ i ];
+					grid[ v -> x ][ v -> y + 1 ] = v -> adjList[ i ];
 				}
-				else if( grid[ v.x ][ v.y + 1 ] == -1 )		// Attempt to place to the top
+				else if( grid[ v -> x - 1 ][ v -> y ] == -1 )			// Attempt to place to the left
 				{
-					graph[ v.adjList[ i ] ] -> x = v.x;
-					graph[ v.adjList[ i ] ] -> y = v.y + 1;
+					graph[ v -> adjList[ i ] ] -> x = v -> x - 1;
+					graph[ v -> adjList[ i ] ] -> y = v -> y;
 
-					grid[ v.x ][ v.y + 1 ] = v.adjList[ i ];
+					grid[ v -> x - 1 ][ v -> y ] = v -> adjList[ i ];
 				}
-				else if( grid[ v.x + 1 ][ v.y ] == -1 )		// Attempt to place to the right
+				else if( grid[ v -> x + 1 ][ v -> y ] == -1 )		// Attempt to place to the right
 				{
-					graph[ v.adjList[ i ] ] -> x = v.x + 1;
-					graph[ v.adjList[ i ] ] -> y = v.y;
+					graph[ v -> adjList[ i ] ] -> x = v -> x + 1;
+					graph[ v -> adjList[ i ] ] -> y = v -> y;
 
-					grid[ v.x + 1 ][ v.y ] = v.adjList[ i ];
+					grid[ v -> x + 1 ][ v -> y ] = v -> adjList[ i ];
 				}
-				else if( grid[ v.x ][ v.y - 1 ] == -1 )		// Attempt to place to the bottom
+				else if( grid[ v -> x ][ v -> y - 1 ] == -1 )		// Attempt to place to the bottom
 				{
-					graph[ v.adjList[ i ] ] -> x = v.x;
-					graph[ v.adjList[ i ] ] -> y = v.y - 1;
+					graph[ v -> adjList[ i ] ] -> x = v -> x;
+					graph[ v -> adjList[ i ] ] -> y = v -> y - 1;
 
-					grid[ v.x ][ v.y - 1 ] = v.adjList[ i ];
+					grid[ v -> x ][ v -> y - 1 ] = v -> adjList[ i ];
 				}
 				else										// Break out if unable to place node anywhere
 				{
@@ -294,26 +304,31 @@ Vertex** layout( Vertex ** g, int numVertices, char* fileName )
 					break;
 				}
 
-				printf( "%i: (%i, %i)\n"
-						"Place %i: (%i, %i)\n\n",
-						v.label, v.x, v.y,
-						v.adjList[ i ], graph[ v.adjList[ i ] ] -> x, graph[ v.adjList[ i ] ] -> y );
+				// printf( "%i: (%i, %i)\n"
+				// 		"Place %i: (%i, %i)\n",
+				// 		v -> label, v -> x, v -> y,
+				// 		v -> adjList[ i ], graph[ v -> adjList[ i ] ] -> x, graph[ v -> adjList[ i ] ] -> y );
 
 				// Mark vertex as placed
-				printf( "Enqueue %i\n", v.adjList[ i ] );
-				graph[ v.adjList[ i ] ] -> placed = 1;
+				// printf( "Enqueue %i\n", v -> adjList[ i ] );
+				graph[ v -> adjList[ i ] ] -> placed = 1;
 
 				Node * newNode = malloc( sizeof( Node ) );
 				newNode -> next = NULL;
 				newNode -> prev = NULL;
-				newNode -> v = graph[ v.adjList[ i ] ];
+				newNode -> v = graph[ v -> adjList[ i ] ];
 				enqueue( q, newNode );
 			}
 		}
 
+		// Save next step of graph
+		sprintf( fileName, "%s_%i.dat", tempFileName, count );
+		printf( "Save to '%s'\n", fileName );
+		graphOutput( graph, numVertices, fileName );
+
 		free( n );
 
-		if( i != v.degree )
+		if( i != v -> degree )
 		{
 			puts( "i != v.degree" );
 			break;
@@ -322,7 +337,7 @@ Vertex** layout( Vertex ** g, int numVertices, char* fileName )
 
 	if( count != numVertices )
 	{
-		printf( "Unable to place all nodes." );
+		printf( "Unable to place all nodes. (%i != %i).", count, numVertices );
 
 		// Free extra nodes
 		while( q -> head != NULL )
@@ -335,7 +350,6 @@ Vertex** layout( Vertex ** g, int numVertices, char* fileName )
 
 	free( q );
 	
-	puts( "" );
 	return graph;
 }
 
